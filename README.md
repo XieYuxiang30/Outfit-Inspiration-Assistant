@@ -2,6 +2,10 @@
 
 结合"说唱+穿搭+篮球"个人背景的多模态穿搭灵感助手。上传衣橱照片，系统自动识别衣物、结合天气和场合，生成个性化穿搭方案。
 
+> 这不是一个通用穿搭助手，而是一个"懂你"的助手：把 Hip-Hop 审美、篮球场景需求、潮流趋势和本地化隐私保护同时融入系统设计。
+
+---
+
 ## ✨ 核心功能
 
 ### 阶段一：MVP 基础功能
@@ -27,6 +31,8 @@
 - 👍 **用户反馈机制**：点赞/踩记录，持续优化 Prompt
 - 🎤 **Hip-Hop Style 专属模式**：Oversize + 大胆配色 + 球鞋配饰
 
+---
+
 ## 🛠️ 技术栈
 
 | 模块 | 技术 | 说明 |
@@ -39,42 +45,78 @@
 | 大语言模型 | DeepSeek / Qwen2.0 | 生成穿搭方案 |
 | 评估模型 | VLM | 穿搭质量评估 |
 
+---
+
+## 🎯 为什么这个项目有差异化？
+
+### 1. 🎤 Hip-Hop Style 专属模式
+- **不是**简单加个风格标签，而是从 Prompt、权重排序、场景判断三层定制
+- 自动识别并优先推荐 Oversize / Baggy / 街头元素
+- 内置关键词权重：Oversize +3、宽松 +3、街头 +2、棒球服 +2
+- 自动规避修身、商务、正装类单品
+
+### 2. 🏀 篮球场景专项
+- 内置球鞋型号库：GT Cut、Harden、Jordan、Kyrie、Curry 等
+- 装备评分机制：篮球鞋 +10、速干上衣 +5、运动配件 +3
+- 选择「打球」场合自动激活篮球 Prompt 和穿搭贴士
+
+### 3. 🔍 以图搜衣
+- CLIP 将穿搭参考图编码为向量
+- ChromaDB 按余弦相似度检索衣橱中相似单品
+- 支持上传任意穿搭照片，直观找到替代组合
+
+### 4. 🖥️ 本地部署
+- Ollama + 4B 小模型本地运行
+- 衣物照片不上传云端，解决隐私顾虑
+- 侧边栏一键切换云端/本地模式
+
+---
+
 ## 📦 项目结构
 
 ```
 Outfit Inspiration Assistant/
 ├── app/
-│   ├── main.py                     # Streamlit 主入口
-│   ├── config.py                   # 配置管理
+│   ├── main.py                      # Streamlit 主入口（5页面）
+│   ├── config.py                    # 配置管理
 │   ├── utils/
-│   │   ├── schema.py               # 数据结构定义
-│   │   └── image.py                # 图像工具
+│   │   ├── schema.py                # 数据结构定义
+│   │   └── image.py                 # 图像工具
 │   ├── wardrobe/
-│   │   ├── detector.py             # YOLOv8 检测
-│   │   ├── extractor.py            # 属性提取
-│   │   └── storage.py              # 向量存储
+│   │   ├── detector.py              # YOLOv8 检测
+│   │   ├── extractor.py             # 属性提取
+│   │   └── storage.py               # 向量存储
 │   ├── recommend/
-│   │   ├── weather.py              # 天气服务
-│   │   ├── retriever.py            # 向量检索
-│   │   ├── generator.py            # 方案生成
-│   │   ├── evaluator.py            # VLM 评估
-│   │   ├── feedback.py             # 用户反馈
-│   │   └── pipeline.py             # 推荐流水线
-│   └── rag/
-│       ├── knowledge_base.py       # 潮流知识库
-│       ├── retriever.py            # RAG 检索
-│       └── prompt.py               # Prompt 模板
+│   │   ├── weather.py               # 天气服务
+│   │   ├── retriever.py             # 向量检索
+│   │   ├── generator.py             # 方案生成
+│   │   ├── evaluator.py             # VLM 评估
+│   │   ├── feedback.py              # 用户反馈
+│   │   └── pipeline.py              # 推荐流水线（差异化整合）
+│   ├── rag/
+│   │   ├── knowledge_base.py        # 潮流知识库
+│   │   ├── retriever.py             # RAG 检索
+│   │   └── prompt.py                # Prompt 模板
+│   ├── styles/
+│   │   ├── hiphop.py                # Hip-Hop 引擎
+│   │   ├── basketball.py            # 篮球场景引擎
+│   │   └── image_search.py          # 以图搜图
+│   └── local/
+│       └── ollama.py                # 本地部署
 ├── requirements.txt
-├── run.py                          # 启动脚本
-└── .env.example                    # 环境变量模板
+├── run.py
+└── .env.example
 ```
+
+---
 
 ## 🚀 快速开始
 
 ### 1. 克隆项目
 
 ```bash
-cd "d:/Users/谢宇翔/Desktop/Outfit Inspiration Assistant"
+git clone https://github.com/XieYuxiang30/Outfit-Inspiration-Assistant.git
+cd Outfit-Inspiration-Assistant
 ```
 
 ### 2. 安装依赖
@@ -114,6 +156,8 @@ streamlit run app/main.py
 
 浏览器会自动打开 `http://localhost:8501`
 
+---
+
 ## 📖 使用指南
 
 ### 1. 上传衣橱照片
@@ -141,14 +185,28 @@ streamlit run app/main.py
   4. VLM Judge 评估打分
 
 ### 4. Hip-Hop Style 模式
-开启右上角「Hip-Hop Style 模式」：
+在「穿搭推荐」页面开启 Hip-Hop Mode：
 - 自动推荐 Oversize 版型
 - 大胆配色方案
 - 球鞋 + 配饰组合
 - 街头风格优先
 
-### 5. 提供反馈
+### 5. 以图搜衣
+进入「以图搜衣」页面：
+- 上传一张喜欢的穿搭照片
+- 系统从衣橱中找到风格相近的单品
+- 基于 CLIP 多模态相似检索
+
+### 6. 本地部署
+1. 安装 Ollama: https://ollama.com
+2. 拉取模型: `ollama pull qwen2.5:4b`
+3. 启动 Ollama 服务
+4. 在侧边栏勾选「使用 Ollama 本地模型」
+
+### 7. 提供反馈
 对生成的方案可以点赞/踩，系统会记录反馈用于持续优化。
+
+---
 
 ## 🔧 开发说明
 
@@ -207,6 +265,8 @@ def evaluate(self, outfit, weather, occasion):
     }
 ```
 
+---
+
 ## 📊 数据流图
 
 ```
@@ -229,13 +289,7 @@ VLM Judge 评估
 Streamlit 前端展示
 ```
 
-## 🎯 差异化亮点
-
-1. **说唱文化专属模式**：Hip-Hop Style 预设，Oversize + 大胆配色 + 球鞋配饰
-2. **篮球场景专项**：针对打球场景优化运动风格推荐
-3. **多模态检索**：支持以文搜图、以图搜图
-4. **本地化部署**：支持 Ollama + 4B 小模型本地运行（数据隐私）
-5. **RAG 增强**：潮流趋势自动融入推荐
+---
 
 ## 📝 后续计划
 
@@ -245,6 +299,8 @@ Streamlit 前端展示
 - [ ] 增加用户系统，云端同步衣橱
 - [ ] 移动端适配
 - [ ] 社交分享功能
+
+---
 
 ## 🤝 贡献
 
