@@ -1,5 +1,5 @@
-from typing import List, Optional, Dict
-from app.utils.schema import WardrobeQuery, Outfit
+from typing import Dict
+from app.utils.schema import WardrobeQuery
 from app.recommend.retriever import WardrobeRetriever
 from app.recommend.generator import OutfitGenerator
 from app.rag.retriever import TrendRetriever

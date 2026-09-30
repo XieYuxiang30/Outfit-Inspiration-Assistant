@@ -1,12 +1,10 @@
 import os
-import json
 import hashlib
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime
 import chromadb
 from sentence_transformers import SentenceTransformer
 from app.config import DATA_DIR
-from app.utils.schema import Garment
 
 
 class TrendKnowledgeBase:
@@ -24,9 +22,9 @@ class TrendKnowledgeBase:
 
     def add_trend(self, content: str, source: str, metadata: Optional[Dict] = None):
         """添加潮流内容"""
-        doc_id = hashlib.md5(f"{source}_{content[:50]}".encode()).hexdigest()
+        doc_id = hashlib.md5(f"{source}_{content[:50]}".encode(), usedforsecurity=False).hexdigest()  # nosec B324
         embedding = self.embedding_model.encode(content).tolist()
-        
+
         meta = {
             "source": source,
             "created_at": datetime.now().isoformat(),
@@ -34,7 +32,7 @@ class TrendKnowledgeBase:
         }
         if metadata:
             meta.update(metadata)
-        
+
         self.collection.add(
             documents=[content],
             embeddings=[embedding],
@@ -49,7 +47,7 @@ class TrendKnowledgeBase:
             query_embeddings=[query_embedding],
             n_results=top_k,
         )
-        
+
         trends = []
         if results["ids"] and results["ids"][0]:
             for i in range(len(results["ids"][0])):
@@ -89,6 +87,6 @@ class TrendKnowledgeBase:
                 "type": "casual",
             },
         ]
-        
+
         for trend in sample_trends:
             self.add_trend(trend["content"], trend["source"], {"type": trend["type"]})

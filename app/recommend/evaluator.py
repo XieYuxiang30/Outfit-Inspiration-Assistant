@@ -62,12 +62,12 @@ class OutfitEvaluator:
             )
             result = response.json()
             content = result["choices"][0]["message"]["content"]
-            
+
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0]
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0]
-            
+
             return json.loads(content.strip())
         except Exception as e:
             print(f"评估失败: {e}")

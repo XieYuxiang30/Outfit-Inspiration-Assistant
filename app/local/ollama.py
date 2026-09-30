@@ -87,7 +87,8 @@ class OllamaClient:
             content = data.get("response", "")
 
             # 简单解析 JSON
-            import json, re
+            import json
+            import re
             match = re.search(r'\{.*\}', content, re.DOTALL)
             if match:
                 result = json.loads(match.group())

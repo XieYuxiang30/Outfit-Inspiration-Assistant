@@ -4,12 +4,9 @@
 
 from typing import List, Optional
 from PIL import Image
-import numpy as np
 from app.wardrobe.storage import WardrobeStorage
 from app.utils.schema import Garment
-from app.config import UPLOAD_DIR
 import os
-import uuid
 
 
 class ImageSearchEngine:

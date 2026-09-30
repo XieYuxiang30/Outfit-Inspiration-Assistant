@@ -2,7 +2,7 @@
 说唱/Hip-Hop 风格专属模块
 """
 
-from app.utils.schema import WardrobeQuery, Outfit, OutfitItem, Garment
+from app.utils.schema import WardrobeQuery, Garment
 from typing import List
 
 

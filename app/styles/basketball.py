@@ -2,8 +2,8 @@
 篮球场景专项优化模块
 """
 
-from typing import List, Dict, Optional
-from app.utils.schema import Garment, GarmentType, Outfit, OutfitItem
+from typing import List
+from app.utils.schema import Garment, GarmentType
 
 
 class BasketballStyleEngine:

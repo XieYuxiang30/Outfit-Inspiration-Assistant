@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict
 from app.config import DATA_DIR
 from app.utils.schema import Outfit
 
@@ -42,7 +42,7 @@ class FeedbackStore:
         feedbacks = data["feedback"]
         if not feedbacks:
             return {"count": 0, "avg_rating": 0}
-        
+
         ratings = [f["rating"] for f in feedbacks]
         return {
             "count": len(feedbacks),

@@ -1,7 +1,8 @@
 import base64
+import os
 import json
 import requests
-from typing import Dict, Optional
+from typing import Dict
 from app.config import MULTIMODAL_API_KEY, MULTIMODAL_BASE_URL, MULTIMODAL_MODEL
 from app.utils.schema import Garment, GarmentType, Season, Formality
 
@@ -26,7 +27,7 @@ class GarmentExtractor:
             return self._default_garment(image_path)
 
         base64_image = self._encode_image(image_path)
-        
+
         prompt = """请分析这件衣物图片，提取以下信息并以JSON格式返回：
 {
   "type": "上衣/裤子/鞋子/外套/配饰",
@@ -69,7 +70,7 @@ class GarmentExtractor:
                 content = content.split("```json")[1].split("```")[0]
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0]
-            
+
             data = json.loads(content.strip())
             return self._parse_to_garment(image_path, data)
         except Exception as e:
@@ -91,11 +92,11 @@ class GarmentExtractor:
             "休闲": Formality.CASUAL, "商务休闲": Formality.SMART_CASUAL,
             "正式": Formality.FORMAL, "运动": Formality.SPORT,
         }
-        
+
         seasons = []
         for s in data.get("season", ["四季"]):
             seasons.append(season_map.get(s, Season.ALL))
-        
+
         return Garment(
             id=os.path.basename(image_path).split(".")[0],
             type=type_map.get(data.get("type", "上衣"), GarmentType.TOP),

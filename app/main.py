@@ -2,10 +2,9 @@ import os
 import uuid
 import streamlit as st
 from PIL import Image
-import tempfile
 
 from app.config import APP_TITLE, UPLOAD_DIR
-from app.utils.schema import WardrobeQuery, Garment
+from app.utils.schema import WardrobeQuery
 from app.wardrobe.detector import GarmentDetector
 from app.wardrobe.extractor import GarmentExtractor
 from app.wardrobe.storage import WardrobeStorage
@@ -15,9 +14,6 @@ from app.recommend.generator import OutfitGenerator
 from app.recommend.pipeline import RecommendationPipeline
 from app.recommend.evaluator import OutfitEvaluator
 from app.recommend.feedback import FeedbackStore
-from app.rag.prompt import PromptTemplate
-from app.styles.hiphop import HipHopStyleEngine
-from app.styles.basketball import BasketballStyleEngine
 from app.styles.image_search import ImageSearchEngine
 from app.local.ollama import get_ollama_client, OllamaClient
 
@@ -72,18 +68,18 @@ def process_wardrobe_image(image_path: str):
         # 1. 检测衣物
         bboxes = detector.detect(image_path)
         st.info(f"检测到 {len(bboxes)} 件衣物区域")
-        
+
         # 2. 裁剪
         from app.utils.image import get_crops
         crop_paths = get_crops(image_path, bboxes, UPLOAD_DIR)
-        
+
         # 3. 提取属性并存储
         new_garments = []
         for crop_path in crop_paths:
             garment = extractor.extract(crop_path)
             storage.add_garment(garment)
             new_garments.append(garment)
-        
+
         st.session_state.wardrobe.extend(new_garments)
         st.success(f"成功识别并添加 {len(new_garments)} 件衣物到衣橱！")
         return new_garments
@@ -93,23 +89,23 @@ def render_sidebar():
     """渲染侧边栏"""
     with st.sidebar:
         st.header("⚙️ 设置")
-        
+
         # API配置
         with st.expander("API配置", expanded=False):
-            multimodal_key = st.text_input("多模态模型API Key", type="password", value="")
-            llm_key = st.text_input("LLM API Key", type="password", value="")
-            weather_key = st.text_input("天气API Key", type="password", value="")
-            city = st.text_input("城市", value="Beijing")
-            
+            st.text_input("多模态模型API Key", type="password", value="")
+            st.text_input("LLM API Key", type="password", value="")
+            st.text_input("天气API Key", type="password", value="")
+            st.text_input("城市", value="Beijing")
+
             if st.button("保存配置"):
                 # 实际应保存到.env，这里简化处理
                 st.success("配置已更新（重启后生效）")
-        
+
         st.divider()
-        
+
         # 统计
         st.header("📊 统计")
-        
+
         # 衣橱统计
         all_garments = storage.get_all()
         st.metric("👕 衣物总数", len(all_garments))
@@ -119,9 +115,9 @@ def render_sidebar():
                 types[g.type.value] = types.get(g.type.value, 0) + 1
             for t, c in types.items():
                 st.write(f"- {t}: {c}件")
-        
+
         st.divider()
-        
+
         # 反馈统计
         stats = feedback_store.get_statistics()
         if stats["count"] > 0:
@@ -129,19 +125,19 @@ def render_sidebar():
             st.metric("总反馈数", stats["count"])
             st.metric("平均评分", f"{stats['avg_rating']}/5")
             st.caption(f"👍 {stats['positive']} | 👎 {stats['negative']}")
-        
+
         # Hip-Hop模式
         if st.session_state.hiphop_mode:
             st.divider()
             st.success("🎤 Hip-Hop Mode: ON")
-        
+
         # 篮球专项
         if "last_result" in st.session_state and st.session_state.get("last_result", {}).get("tips"):
             st.divider()
             st.success("🏀 篮球模式已激活")
-        
+
         st.divider()
-        
+
         # 本地部署
         st.header("🖥️ 本地部署")
         st.session_state.use_local_llm = st.checkbox(
@@ -163,31 +159,31 @@ def render_sidebar():
 def render_wardrobe_page():
     """渲染衣橱管理页面"""
     st.header("👕 我的衣橱")
-    
+
     col1, col2 = st.columns([1, 1])
-    
+
     with col1:
         st.subheader("📸 上传衣橱照片")
         uploaded_file = st.file_uploader(
-            "选择一张衣橱照片", 
+            "选择一张衣橱照片",
             type=["jpg", "jpeg", "png"],
             help="上传包含多件衣物的照片，系统将自动识别"
         )
-        
+
         if uploaded_file:
             # 预览
             image = Image.open(uploaded_file)
             st.image(image, caption="上传的图片", use_column_width=True)
-            
+
             if st.button("🔍 开始识别衣物", type="primary"):
                 temp_path = save_uploaded_file(uploaded_file)
                 process_wardrobe_image(temp_path)
                 st.rerun()
-    
+
     with col2:
         st.subheader("📋 已识别的衣物")
         all_garments = storage.get_all()
-        
+
         if not all_garments:
             st.info("暂无衣物，请先上传照片识别")
         else:
@@ -206,17 +202,17 @@ def render_wardrobe_page():
 def render_recommend_page():
     """渲染穿搭推荐页面"""
     st.header("✨ 穿搭推荐")
-    
+
     col1, col2 = st.columns([1, 2])
-    
+
     with col1:
         st.subheader("📝 设置偏好")
-        
+
         # Hip-Hop 模式
         st.session_state.hiphop_mode = st.toggle("🎤 Hip-Hop Style 模式", value=st.session_state.hiphop_mode)
         if st.session_state.hiphop_mode:
             st.caption("Oversize版型 + 大胆配色 + 球鞋 + 配饰")
-        
+
         # 天气信息
         city = st.text_input("城市", value="Beijing")
         if st.button("🌤️ 获取天气"):
@@ -227,7 +223,7 @@ def render_recommend_page():
                     st.success(f"已获取 {weather_info['city']} 天气")
                 else:
                     st.warning("无法获取天气，请检查API Key")
-        
+
         if st.session_state.weather:
             w = st.session_state.weather
             cols = st.columns(3)
@@ -235,7 +231,7 @@ def render_recommend_page():
             cols[1].metric("体感", f"{w['feels_like']}°C")
             cols[2].metric("湿度", f"{w.get('humidity', '?')}%")
             st.caption(f"天气: {w['description']} | 风速: {w.get('wind_speed', '?')}m/s")
-        
+
         # 场合选择（增强：篮球专项）
         occasion = st.selectbox(
             "选择场合",
@@ -252,7 +248,7 @@ def render_recommend_page():
                 "旅行",
             ],
         )
-        
+
         # 风格偏好
         default_style = "Hip-Hop / Oversize / 街头" if st.session_state.hiphop_mode else ""
         style = st.text_input(
@@ -260,7 +256,7 @@ def render_recommend_page():
             value=default_style,
             placeholder="如：Oversize、街头风、简约、商务",
         )
-        
+
         # 生成按钮
         if st.button("🎨 生成穿搭方案", type="primary"):
             with st.spinner("正在生成穿搭方案..."):
@@ -271,47 +267,48 @@ def render_recommend_page():
                     weather_feels_like=st.session_state.weather.get("feels_like") if st.session_state.weather else None,
                     weather_desc=st.session_state.weather.get("description") if st.session_state.weather else None,
                 )
-                
+
                 # 使用完整流水线（支持本地模型）
                 result = pipeline.run(query, use_local=st.session_state.use_local_llm)
-                
+
                 st.session_state["last_outfits"] = result["outfits"]
                 st.session_state["last_evaluations"] = result["evaluations"]
                 st.session_state["last_result"] = result
                 st.rerun()
-    
+
     with col2:
         st.subheader("👔 推荐方案")
-        
+
         if "last_outfits" in st.session_state and st.session_state["last_outfits"]:
             outfits = st.session_state["last_outfits"]
             evaluations = st.session_state.get("last_evaluations", [])
             result = st.session_state.get("last_result", {})
-            
+
             # 显示潮流提示
             if result.get("trends"):
                 with st.expander("📈 参考潮流趋势", expanded=False):
                     for trend in result["trends"]:
                         st.write(f"- {trend}")
-            
+
             # 篮球专项提示
             if result.get("tips"):
                 with st.expander("🏀 篮球穿搭贴士", expanded=False):
                     for tip in result["tips"]:
                         st.write(tip)
-            
+
             for i, outfit in enumerate(outfits, 1):
                 eval_score = evaluations[i - 1] if i <= len(evaluations) else {}
-                with st.expander(f"方案 {i} {'⭐ ' + str(eval_score.get('total_score', '?')) if eval_score else ''}", expanded=(i == 1)):
+                score_label = f"⭐ {eval_score.get('total_score', '?')}" if eval_score else ""
+                with st.expander(f"方案 {i} {score_label}", expanded=(i == 1)):
                     cols = st.columns(4)
-                    
+
                     items = [
                         ("👕 上衣", outfit.top),
                         ("👖 裤子", outfit.bottom),
                         ("👟 鞋子", outfit.shoes),
                         ("🧥 外套", outfit.outerwear),
                     ]
-                    
+
                     for col, (label, item) in zip(cols, items):
                         with col:
                             if item:
@@ -321,13 +318,13 @@ def render_recommend_page():
                             else:
                                 st.write(f"**{label}**")
                                 st.caption("无")
-                    
+
                     if outfit.accessories:
                         st.write("**配饰**: " + ", ".join([f"{a.color}{a.type}" for a in outfit.accessories]))
-                    
+
                     st.divider()
                     st.write(f"💡 **推荐理由**: {outfit.reason}")
-                    
+
                     # 评估分数
                     if eval_score:
                         score_cols = st.columns(4)
@@ -337,7 +334,7 @@ def render_recommend_page():
                         score_cols[3].metric("综合", eval_score.get("total_score", "?"))
                         if eval_score.get("suggestions"):
                             st.caption(f"改进建议: {eval_score['suggestions']}")
-                    
+
                     # 反馈按钮
                     feedback_cols = st.columns(5)
                     with feedback_cols[0]:
@@ -404,19 +401,19 @@ def render_image_search_page():
 def render_chat_page():
     """渲染对话页面"""
     st.header("💬 穿搭助手对话")
-    
+
     # 显示历史消息
     for message in st.session_state.chat_history:
         with st.chat_message(message["role"]):
             st.write(message["content"])
-    
+
     # 用户输入
     if prompt := st.chat_input("输入你的穿搭问题..."):
         # 添加用户消息
         st.session_state.chat_history.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.write(prompt)
-        
+
         # 生成回复
         with st.chat_message("assistant"):
             with st.spinner("思考中..."):
@@ -430,41 +427,10 @@ def render_chat_page():
                         response = "请先在推荐页面获取天气信息。"
                 else:
                     response = "我是你的穿搭助手，可以帮你推荐穿搭方案、管理衣橱。请上传衣物照片或选择推荐功能开始使用。"
-                
+
                 st.write(response)
-        
+
         st.session_state.chat_history.append({"role": "assistant", "content": response})
-
-
-def main():
-    """主函数"""
-    st.title(f"👕 {APP_TITLE}")
-    st.markdown("---")
-    
-    # 侧边栏
-    render_sidebar()
-    
-    # 页面导航
-    page = st.sidebar.radio(
-        "导航",
-        ["👕 我的衣橱", "✨ 穿搭推荐", "🔍 以图搜衣", "💬 对话助手", "🚀 差异特色"],
-        label_visibility="collapsed"
-    )
-    
-    if page == "👕 我的衣橱":
-        render_wardrobe_page()
-    elif page == "✨ 穿搭推荐":
-        render_recommend_page()
-    elif page == "🔍 以图搜衣":
-        render_image_search_page()
-    elif page == "💬 对话助手":
-        render_chat_page()
-    elif page == "🚀 差异特色":
-        render_features_page()
-    
-    # 页脚
-    st.divider()
-    st.caption("💡 提示：首次使用请先在侧边栏配置API密钥")
 
 
 def render_features_page():
@@ -561,17 +527,17 @@ def main():
     """主函数"""
     st.title(f"👕 {APP_TITLE}")
     st.markdown("---")
-    
+
     # 侧边栏
     render_sidebar()
-    
+
     # 页面导航
     page = st.sidebar.radio(
         "导航",
         ["👕 我的衣橱", "✨ 穿搭推荐", "🔍 以图搜衣", "💬 对话助手", "🚀 差异特色"],
         label_visibility="collapsed"
     )
-    
+
     if page == "👕 我的衣橱":
         render_wardrobe_page()
     elif page == "✨ 穿搭推荐":
@@ -582,7 +548,7 @@ def main():
         render_chat_page()
     elif page == "🚀 差异特色":
         render_features_page()
-    
+
     # 页脚
     st.divider()
     st.caption("💡 提示：首次使用请先在侧边栏配置API密钥")

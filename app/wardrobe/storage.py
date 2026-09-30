@@ -1,8 +1,6 @@
 import chromadb
-from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
-from typing import List, Optional
-import os
+from typing import List, Optional, Dict
 from app.config import CHROMA_DIR
 from app.utils.schema import Garment
 
@@ -27,7 +25,7 @@ class WardrobeStorage:
             text += f" {garment.material}"
         if garment.pattern:
             text += f" {garment.pattern}"
-        
+
         embedding = self.embedding_model.encode(text).tolist()
         garment.embedding = embedding
 
@@ -48,13 +46,13 @@ class WardrobeStorage:
     def search(self, query: str, top_k: int = 5, filters: Optional[Dict] = None) -> List[Garment]:
         """向量检索相似衣物"""
         query_embedding = self.embedding_model.encode(query).tolist()
-        
+
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=top_k,
             where=filters if filters else None,
         )
-        
+
         garments = []
         if results["ids"] and results["ids"][0]:
             for i, garment_id in enumerate(results["ids"][0]):

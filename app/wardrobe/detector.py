@@ -1,7 +1,5 @@
 from ultralytics import YOLO
 from typing import List, Tuple
-import os
-from app.config import MODELS_DIR
 
 
 class GarmentDetector:
@@ -26,13 +24,13 @@ class GarmentDetector:
         """检测衣物并返回边界框"""
         results = self.model(image_path, conf=conf_threshold, verbose=False)
         bboxes = []
-        
+
         if len(results) > 0 and len(results[0].boxes) > 0:
             boxes = results[0].boxes
             for box in boxes:
                 x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
                 bboxes.append((x1, y1, x2, y2))
-        
+
         # 如果没检测到，返回默认裁剪区域（将图片分成4个区域）
         if not bboxes:
             import cv2
@@ -42,5 +40,5 @@ class GarmentDetector:
             bboxes.append((0, 0, w, h // 2))
             # 下半部分（裤子）
             bboxes.append((0, h // 2, w, h))
-        
+
         return bboxes[:4]  # 最多返回4件衣物

@@ -1,6 +1,6 @@
 import json
 import requests
-from typing import List, Optional
+from typing import List
 from app.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
 from app.utils.schema import WardrobeQuery, Outfit, Garment, OutfitItem
 
@@ -67,13 +67,13 @@ class OutfitGenerator:
             )
             result = response.json()
             content = result["choices"][0]["message"]["content"]
-            
+
             # 解析JSON
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0]
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0]
-            
+
             data = json.loads(content.strip())
             outfits = []
             for item in data.get("outfits", [])[:3]:

@@ -26,7 +26,12 @@ def save_crop(image: np.ndarray, bbox: Tuple[int, int, int, int], output_path: s
         cv2.imwrite(output_path, crop)
 
 
-def get_crops(image_path: str, bboxes: List[Tuple[int, int, int, int]], output_dir: str, prefix: str = "garment") -> List[str]:
+def get_crops(
+    image_path: str,
+    bboxes: List[Tuple[int, int, int, int]],
+    output_dir: str,
+    prefix: str = "garment",
+) -> List[str]:
     """批量裁剪图片"""
     image = load_image(image_path)
     crop_paths = []
