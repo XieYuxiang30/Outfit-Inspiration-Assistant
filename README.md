@@ -33,6 +33,62 @@
 
 ---
 
+## 🏗️ 系统架构
+
+```mermaid
+graph TB
+    subgraph "前端层"
+        A[Streamlit 主界面]
+        B[我的衣橱]
+        C[穿搭推荐]
+        D[以图搜衣]
+        E[对话助手]
+        F[差异特色]
+    end
+
+    subgraph "服务层"
+        G[YOLOv8 检测器]
+        H[多模态提取器]
+        I[向量存储 ChromaDB]
+        J[天气服务]
+        K[向量检索]
+        L[LLM 生成]
+        M[VLM 评估]
+        N[用户反馈]
+        O[潮流知识库]
+    end
+
+    subgraph "差异化引擎"
+        P[Hip-Hop 引擎]
+        Q[篮球场景引擎]
+        R[以图搜图 CLIP]
+        S[Ollama 本地]
+    end
+
+    subgraph "外部服务"
+        T[DashScope Qwen-VL]
+        U[OpenWeatherMap]
+        V[Ollama 本地]
+    end
+
+    A --> B & C & D & E & F
+    B --> G
+    G --> H
+    H --> I
+    C --> J & K & L & M
+    K --> I
+    L --> O
+    C --> P & Q & R & S
+    D --> R
+    P & Q --> L
+    H --> T
+    J --> U
+    S --> V
+    M --> N
+```
+
+---
+
 ## 🛠️ 技术栈
 
 | 模块 | 技术 | 说明 |
@@ -269,24 +325,28 @@ def evaluate(self, outfit, weather, occasion):
 
 ## 📊 数据流图
 
-```
-用户上传照片
-    ↓
-YOLOv8 检测 → OpenCV 裁剪
-    ↓
-Qwen-VL-Max 提取属性 (JSON)
-    ↓
-CLIP 生成向量 → ChromaDB 存储
-    ↓
-用户提问 + 天气 + 场合
-    ↓
-向量检索匹配衣物 → RAG 检索潮流
-    ↓
-LLM 生成穿搭方案
-    ↓
-VLM Judge 评估
-    ↓
-Streamlit 前端展示
+```mermaid
+flowchart LR
+    A[上传衣橱照片] --> B[YOLOv8 检测]
+    B --> C[OpenCV 裁剪]
+    C --> D[多模态提取属性]
+    D --> E[CLIP 生成向量]
+    E --> F[ChromaDB 存储]
+
+    G[用户输入] --> H{场合/天气/风格}
+    H --> I[向量检索匹配衣物]
+    I --> J[RAG 检索潮流]
+    J --> K[差异化引擎]
+    K --> K1[Hip-Hop 排序]
+    K --> K2[篮球场景评分]
+    K --> K3[以图搜图]
+    K --> K4[本地模型]
+    K1 & K2 & K3 & K4 --> L[LLM 生成方案]
+    L --> M[VLM Judge 评估]
+    M --> N[前端展示]
+
+    O[OpenWeatherMap] --> H
+    P[潮流知识库] --> J
 ```
 
 ---
